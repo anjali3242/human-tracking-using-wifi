@@ -1,4 +1,5 @@
 # 📍 Faculty Tracking System (WiFi-Based)
+<img width="1083" height="681" alt="Screenshot 2026-04-08 224917" src="https://github.com/user-attachments/assets/76b08008-17b5-476e-bba3-51537bea9ee9" />
 
 ## 🚀 Overview
 
