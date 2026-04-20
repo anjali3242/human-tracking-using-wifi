@@ -1,0 +1,25 @@
+{
+  "rooms": [
+    {
+      "id": 1,
+      "name": "Lecture Hall A1",
+      "type": "classroom",
+      "x": 80,
+      "y": 457
+    },
+    {
+      "id": 2,
+      "name": "Lecture Hall A2",
+      "type": "classroom",
+      "x": 150,
+      "y": 457
+    },
+    {
+      "id": 3,
+      "name": "Lecture Hall A3",
+      "type": "classroom",
+      "x": 220,
+      "y": 457
+    }
+  ]
+}

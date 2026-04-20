@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Faculty Map Tracker</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  input { padding: 5px; width: 200px; }
+  button { padding: 5px 10px; }
+  #result { margin-top: 20px; font-weight: bold; }
+
+  #map {
+    width: 100%;
+    max-width: 1200px;
+    height: 80vh;
+    position: relative;
+    background: url('map.png') no-repeat center center;
+    background-size: contain;
+    border: 1px solid #000;
+    overflow: hidden;
+  }
+
+  .room-dot {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background-color: blue;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .highlight {
+    background-color: red !important;
+  }
+</style>
+</head>
+<body>
+
+<h2>Search for a Room or Faculty</h2>
+<input type="text" id="searchRoom" placeholder="Enter room number or faculty name">
+<button onclick="searchRoomOrFaculty()">Search</button>
+
+<div id="result"></div>
+<div id="map"></div>
+
+<script>
+const originalMapWidth = 1200;
+const originalMapHeight = 800;
+
+// Rooms with faculty (Ground + 2nd floor)
+const rooms = [
+  { id: 1, number: "001", x: 100, y: 100, faculty: "Dr. Smith" },
+  { id: 2, number: "002", x: 150, y: 100, faculty: "Dr. Johnson" },
+  { id: 3, number: "004", x: 200, y: 100, faculty: "Prof. Lee" },
+  { id: 4, number: "006", x: 250, y: 150, faculty: "Dr. Patel" },
+  { id: 5, number: "007", x: 100, y: 150, faculty: "Dr. Brown" },
+  { id: 6, number: "008", x: 150, y: 150, faculty: "Prof. Clark" },
+  { id: 7, number: "010", x: 250, y: 200, faculty: "Dr. Allen" },
+  { id: 8, number: "011", x: 300, y: 200, faculty: "Dr. Davis" },
+  { id: 9, number: "012", x: 350, y: 200, faculty: "Prof. Miller" },
+  { id: 15, number: "201", x: 100, y: 500, faculty: "Dr. Rao" },
+  { id: 16, number: "202", x: 150, y: 500, faculty: "Prof. Kumar" },
+  { id: 17, number: "203", x: 200, y: 500, faculty: "Dr. Mehta" },
+  { id: 18, number: "204", x: 250, y: 550, faculty: "Prof. Nair" }
+];
+
+// Floor boxes for 1st and 3rd floors (multiple faculty)
+const floorBoxes = [
+  { floor: "1st Floor", x: 800, y: 300, width: 200, height: 100, rooms: ["101","102","103","104","106"], faculty: ["Dr. A","Prof. B","Dr. C"] },
+  { floor: "3rd Floor", x: 800, y: 700, width: 200, height: 100, rooms: ["301","302","303","304"], faculty: ["Dr. X","Prof. Y","Dr. Z"] }
+];
+
+const mapDiv = document.getElementById('map');
+
+function drawDots() {
+  mapDiv.innerHTML = '';
+
+  const mapWidth = mapDiv.clientWidth;
+  const mapHeight = mapDiv.clientHeight;
+  const imgRatio = originalMapWidth / originalMapHeight;
+  const divRatio = mapWidth / mapHeight;
+
+  let displayWidth, displayHeight, offsetX, offsetY;
+  if(divRatio > imgRatio){
+    displayHeight = mapHeight;
+    displayWidth = displayHeight * imgRatio;
+    offsetX = (mapWidth - displayWidth)/2; offsetY = 0;
+  } else {
+    displayWidth = mapWidth;
+    displayHeight = displayWidth / imgRatio;
+    offsetX = 0; offsetY = (mapHeight - displayHeight)/2;
+  }
+
+  // Draw individual room dots
+  rooms.forEach(room => {
+    const dot = document.createElement('div');
+    dot.classList.add('room-dot');
+    dot.id = `room-${room.id}`;
+
+    const scaledX = room.x / originalMapWidth * displayWidth + offsetX;
+    const scaledY = room.y / originalMapHeight * displayHeight + offsetY;
+
+    dot.style.left = scaledX + 'px';
+    dot.style.top = scaledY + 'px';
+    dot.textContent = room.number;
+
+    mapDiv.appendChild(dot);
+  });
+
+  // Draw floor boxes
+  floorBoxes.forEach(floor => {
+    const box = document.createElement('div');
+    box.classList.add('room-dot'); // reuse style
+    box.id = `floor-${floor.floor.replace(" ","-")}`;
+    box.style.backgroundColor = "rgba(255,0,0,0.2)";
+    box.style.border = "2px solid red";
+    box.style.width = (floor.width / originalMapWidth * displayWidth) + "px";
+    box.style.height = (floor.height / originalMapHeight * displayHeight) + "px";
+    box.style.left = (floor.x / originalMapWidth * displayWidth + offsetX) + "px";
+    box.style.top = (floor.y / originalMapHeight * displayHeight + offsetY) + "px";
+    box.style.transform = "translate(0,0)";
+    box.style.color = "red";
+    box.style.fontSize = "14px";
+    box.style.display = "flex";
+    box.style.alignItems = "center";
+    box.style.justifyContent = "center";
+    box.textContent = floor.floor;
+
+    mapDiv.appendChild(box);
+  });
+}
+
+// Search function (room number OR faculty name)
+function searchRoomOrFaculty() {
+  const query = document.getElementById("searchRoom").value.trim().toLowerCase();
+  const resultDiv = document.getElementById("result");
+
+  // Reset all highlights
+  document.querySelectorAll('.room-dot').forEach(el => el.classList.remove('highlight'));
+
+  // Search in rooms
+  let room = rooms.find(r => r.number.toLowerCase() === query || r.faculty.toLowerCase() === query);
+  if(room){
+    document.getElementById(`room-${room.id}`).classList.add('highlight');
+    resultDiv.textContent = `Faculty: ${room.faculty} | Room: ${room.number}`;
+    return;
+  }
+
+  // Search in floor boxes
+  let floor = floorBoxes.find(f => f.rooms.some(rn => rn.toLowerCase() === query) 
+                                   || f.faculty.some(fac => fac.toLowerCase() === query));
+  if(floor){
+    document.getElementById(`floor-${floor.floor.replace(" ","-")}`).classList.add('highlight');
+    resultDiv.textContent = `Faculty(s): ${floor.faculty.join(", ")} | Floor: ${floor.floor}`;
+    return;
+  }
+
+  resultDiv.textContent = "Room or faculty not found";
+}
+
+drawDots();
+window.addEventListener('resize', drawDots);
+</script>
+
+</body>
+</html>
